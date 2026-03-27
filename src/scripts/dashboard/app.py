@@ -1,32 +1,43 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
+import os
 
-# Configura a página
-st.set_page_config(page_title="Netflix DataOps Dashboard", layout="wide")
+# Configurações de conexão via Variáveis de Ambiente
+def get_engine():
+    user = os.getenv('DB_USER', 'postgres')
+    pwd = os.getenv('DB_PASS', 'postgres')
+    host = os.getenv('DB_HOST', 'db')
+    port = os.getenv('DB_PORT', '5432')
+    db = os.getenv('DB_NAME', 'netflixdb')
+    return create_engine(f"postgresql://{user}:{pwd}@{host}:{port}/{db}")
 
-st.title("🎬 Pipeline de Dados Netflix")
-st.subheader("Status: Orquestrado via Luigi & Validado com Great Expectations")
+st.set_page_config(page_title="Netflix Analytics", layout="wide")
 
-# Conector (ajuste com suas credenciais do docker-compose)
-engine = create_engine('postgresql://paulo:senha@netflixdb:5432/netflix_db')
+st.title("🎬 Dashboard Netflix - Data Pipeline")
+st.markdown("---")
 
-# Sidebar para filtros
-st.sidebar.header("Filtros")
-tipo = st.sidebar.multiselect("Selecione o Tipo:", ["Movie", "TV Show"], default=["Movie", "TV Show"])
+@st.cache_data(ttl=600)
+def load_data():
+    engine = get_engine()
+    # Tenta ler da Gold (ajuste o nome da tabela conforme seu script Luigi)
+    return pd.read_sql("SELECT * FROM netflix_titles LIMIT 500", engine)
 
-# Carrega os dados da camada GOLD (A que está pronta para o negócio)
-df = pd.read_sql("SELECT * FROM gold_netflix_titles", engine)
+try:
+    df = load_data()
+    
+    # KPIs principais
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Títulos Totais", len(df))
+    c2.metric("Qualidade dos Dados", "✅ GX Verified")
+    c3.metric("Ambiente", "Docker / Devbox")
 
-# Filtra o dataframe
-df_filtered = df[df['type'].isin(tipo)]
+    st.subheader("Análise por Tipo de Conteúdo")
+    st.bar_chart(df['type'].value_counts())
 
-# Métricas rápidas
-col1, col2, col3 = st.columns(3)
-col1.metric("Total de Títulos", len(df_filtered))
-col2.metric("Qualidade dos Dados", "100% (GX Verified)")
-col3.metric("Última Carga", "Hoje")
+    st.subheader("Visualização da Camada Gold")
+    st.dataframe(df, use_container_width=True)
 
-# Gráfico
-st.write("### Distribuição de Títulos")
-st.bar_chart(df_filtered['type'].value_counts())
+except Exception as e:
+    st.error(f"Aguardando dados... Erro: {e}")
+    st.info("O banco de dados pode estar vazio. Rode o pipeline do Luigi primeiro!")

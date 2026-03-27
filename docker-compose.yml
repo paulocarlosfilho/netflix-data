@@ -20,8 +20,9 @@ services:
 
   pipeline:
     build:
-      context: ./src/scripts/dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile # O Dockerfile do Luigi na raiz
+    container_name: netflix_pipeline
     command: tail -f /dev/null
     tty: true
     env_file:
@@ -33,17 +34,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
   dashboard:
     build: 
-      context: .
-      dockerfile: src/scripts/dashboard/Dockerfile # O Docker diz onde está o manual
+      context: ./src/scripts/dashboard
+      dockerfile: Dockerfile
     container_name: netflix_visualizacao
     ports:
       - "8501:8501"
+    environment:
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DB_NAME=netflixdb
+      - DB_HOST=db
+      - DB_PORT=5432
     volumes:
-      - ./src:/app/src # Compartilha o código
+      - ./src/scripts/dashboard:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:
