@@ -1,0 +1,38 @@
+.venv/
+.devbox/
+api_backend/
+backend/
+monitoring/
+manual.md/
+prometheus/
+
+# Ambientes Virtuais
+.venv/
+venv/
+ENV/
+
+# Arquivos de Cache e Compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de Distribuição
+build/
+dist/
+*.egg-info/
+
+# Arquivos de Configuração Local e Segredos
+.env
+.env.*
+!/.env.example
+
+# Dados Gerados pelo Pipeline
+data/
+
+# Arquivos não versionados do Great Expectations
+great_expectations/uncommitted/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db

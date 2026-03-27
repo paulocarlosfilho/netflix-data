@@ -1,0 +1,51 @@
+{
+  "packages": [
+    "python@3.11",
+    "poetry@latest",
+    "postgresql@15",
+    "prometheus@latest",
+    "grafana@latest",
+    "awscli2@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo '🚀 SISTEMA PRONTO PARA OPERAR'",
+      "export PGDATA=$PWD/.db_data",
+      "export PROMETHEUS_CONFIG=$PWD/monitoring/prometheus/prometheus.yml"
+    ],
+    "scripts": {
+      "db-init": "pg_ctl initdb",
+      "db-start": "pg_ctl -l $PWD/.db_data/logfile start",
+      "install-python": [
+        "echo '[tool.poetry]' > pyproject.toml",
+        "echo 'name = \"banco-da-dio\"' >> pyproject.toml",
+        "echo 'version = \"0.1.0\"' >> pyproject.toml",
+        "echo 'description = \"\"' >> pyproject.toml",
+        "echo 'authors = [\"Paulo Carlos Filho\"]' >> pyproject.toml",
+        "echo 'package-mode = false' >> pyproject.toml",
+        "echo '' >> pyproject.toml",
+        "echo '[tool.poetry.dependencies]' >> pyproject.toml",
+        "echo 'python = \"^3.11\"' >> pyproject.toml",
+        "echo 'pandas = \"^2.0.0\"' >> pyproject.toml",
+        "echo 'numpy = \"^1.24.0\"' >> pyproject.toml",
+        "echo 'scikit-learn = \"^1.3.0\"' >> pyproject.toml",
+        "echo 'seaborn = \"^0.12.0\"' >> pyproject.toml",
+        "echo 'sqlalchemy = \"^2.0.0\"' >> pyproject.toml",
+        "echo 'psycopg2-binary = \"^2.9.0\"' >> pyproject.toml",
+        "echo 'luigi = \"^3.0.0\"' >> pyproject.toml",
+        "echo 'pyarrow = \"*\"' >> pyproject.toml",
+        "echo 'ipykernel = \"*\"' >> pyproject.toml",
+        "echo 'matplotlib = \"*\"' >> pyproject.toml",
+        "echo 'boto3 = \"*\"' >> pyproject.toml",
+        "echo 'prometheus-client = \"*\"' >> pyproject.toml",
+        "echo 'awscli-local = \"*\"' >> pyproject.toml",
+        "echo 'great-expectations = \"^0.15.50\"' >> pyproject.toml",
+        "echo '' >> pyproject.toml",
+        "echo '[build-system]' >> pyproject.toml",
+        "echo 'requires = [\"poetry-core\"]' >> pyproject.toml",
+        "echo 'build-backend = \"poetry.core.masonry.api\"' >> pyproject.toml",
+        "poetry lock && poetry install"
+      ]
+    }
+  }
+}

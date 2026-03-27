@@ -1,0 +1,173 @@
+#!/bin/bash
+
+# 1. LIMPEZA TOTAL
+echo "🧹 Limpando tudo..."
+rm -rf .devbox .db_data .venv
+
+# 2. ESTRUTURA
+echo "📂 Criando pastas..."
+mkdir -p src prometheus great_expectations/{expectations,checkpoints}
+
+# CRIAÇÃO DO .env.example
+echo "🔑 Gerando arquivo de exemplo para variáveis de ambiente..."
+if [ ! -f ".env.example" ]; then
+cat <<EOF > .env.example
+# Chave de API necessária para acessar o OpenWeatherMap
+OPENWEATHER_API_KEY="SUA_CHAVE_AQUI"
+EOF
+fi
+
+# 3. DEVBOX.JSON
+echo "📦 Gerando devbox.json (se não existir)..."
+if [ ! -f "devbox.json" ]; then
+cat <<EOF > devbox.json
+{
+  "packages": [
+    "python@3.11",
+    "poetry@latest",
+    "postgresql@15",
+    "prometheus@latest",
+    "grafana@latest",
+    "awscli2@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo '🚀 SISTEMA PRONTO PARA OPERAR'",
+      "export PGDATA=\$PWD/.db_data",
+      "export PROMETHEUS_CONFIG=\$PWD/prometheus/prometheus.yml"
+    ],
+    "scripts": {
+      "db-init": "pg_ctl initdb",
+      "db-start": "pg_ctl -l \$PWD/.db_data/logfile start",
+      "install-python": [
+        "poetry lock && poetry install"
+      ]
+    }
+  }
+}
+EOF
+fi
+
+# 4. CONFIGURAÇÃO PROMETHEUS
+cat <<EOF > prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: 'pipeline'
+    static_configs:
+      - targets: ['localhost:8000']
+EOF
+
+# 5. CONFIGURAÇÃO GREAT EXPECTATIONS
+echo "🧐 Gerando arquivos do Great Expectations..."
+
+# great_expectations.yml
+if [ ! -f "great_expectations/great_expectations.yml" ]; then
+cat <<EOF > great_expectations/great_expectations.yml
+config_version: 3.0
+datasources:
+  pandas_filesystem:
+    class_name: Datasource
+    execution_engine:
+      class_name: PandasExecutionEngine
+    data_connectors:
+      default_inferred_data_connector_name:
+        class_name: InferredAssetFilesystemDataConnector
+        base_directory: ../data/silver
+        default_regex:
+          pattern: (.*)\\.parquet
+          group_names:
+            - data_asset_name
+config_variables_file_path: uncommitted/config_variables.yml
+expectations_store_name: expectations_store
+validations_store_name: validations_store
+evaluation_parameter_store_name: evaluation_parameter_store
+stores:
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: expectations/
+  validations_store:
+    class_name: ValidationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+  evaluation_parameter_store:
+    class_name: EvaluationParameterStore
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+anonymous_usage_statistics:
+  enabled: false
+EOF
+fi
+
+# Suíte de Expectativas
+if [ ! -f "great_expectations/expectations/silver_weather_suite.json" ]; then
+cat <<EOF > great_expectations/expectations/silver_weather_suite.json
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "silver_weather_suite",
+  "expectations": [
+    {
+      "expectation_type": "expect_table_columns_to_match_ordered_list",
+      "kwargs": {
+        "column_list": ["city","temp","temp_min","temp_max","humidity","description","date"]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "temp"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "kwargs": {
+        "column": "temp",
+        "type_": "float"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "humidity",
+        "min_value": 0,
+        "max_value": 100
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "temp",
+        "min_value": -50,
+        "max_value": 50
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.15.50"
+  }
+}
+EOF
+fi
+
+echo "✅ Arquivos gerados!"
+echo "👉 1. devbox shell"
+
+
+# Para iniciar o poetry
+# poetry install
+# source $(poetry env info --path)/bin/activate

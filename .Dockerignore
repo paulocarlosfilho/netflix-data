@@ -1,0 +1,7 @@
+.venv/
+.git/
+__pycache__/
+data/
+*.xlsx
+*.parquet
+.env
