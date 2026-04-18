@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
+
 def salvar_camada_gold():
     current_dir = os.path.dirname(__file__)
     silver_path = os.path.abspath(os.path.join(current_dir, "../../../data/silver/tabela_silver_pronta_para_ml.parquet"))

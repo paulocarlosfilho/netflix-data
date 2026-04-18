@@ -5,3 +5,6 @@ data/
 *.xlsx
 *.parquet
 .env
+venv
+.ipynb_checkpoints
+*.csv

@@ -51,7 +51,7 @@ def download_and_enrich_data():
 
         print("\n🔥 Camada Bronze finalizada com sucesso!")
         
-        # --- O PULO DO GATO ESTÁ AQUI ---
+        
         # Cria o arquivo de sucesso DENTRO da pasta data/bronze
         success_file = os.path.join(bronze_path, "_SUCCESS")
         with open(success_file, "w") as f:
