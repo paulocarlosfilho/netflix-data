@@ -1,5 +1,7 @@
 # Pipeline de Dados Netflix com Orquestração
 
+![Dashboard](img/portfolio.png)
+
 Este projeto demonstra a construção de um pipeline de dados de ponta a ponta, utilizando o dataset público (Netflix marketing) como fonte. O pipeline processa dados através de camadas (Bronze, Silver, Gold), valida qualidade com Great Expectations, disponibiliza a camada final em PostgreSQL e apresenta os resultados em um dashboard interativo com Streamlit.
 
 ## Arquitetura do Projeto

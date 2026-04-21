@@ -18,22 +18,31 @@ services:
       timeout: 3s
       retries: 5
 
+  luigi:
+    image: axiom/docker-luigi
+    container_name: luigi_scheduler
+    ports:
+      - "8082:8082"
+
   pipeline:
     build:
       context: .
-      dockerfile: Dockerfile # O Dockerfile do Luigi na raiz
+      dockerfile: Dockerfile
     container_name: netflix_pipeline
     command: tail -f /dev/null
     tty: true
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL_DOCKER:-postgresql+psycopg2://postgres:postgres@db:5432/netflixdb}
+      - DATABASE_URL=${DATABASE_URL_DOCKER:-postgresql+psycopg2://postgres:postgres@db:5432/netflixdb}
+      - LUIGI_SCHEDULER_HOST=luigi
     volumes:
       - ./:/app
     depends_on:
       db:
         condition: service_healthy
+      luigi:
+        condition: service_started
 
   dashboard:
     build: 

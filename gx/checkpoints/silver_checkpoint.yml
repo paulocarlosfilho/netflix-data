@@ -1,0 +1,10 @@
+name: silver_checkpoint
+config_version: 1.0
+class_name: SimpleCheckpoint
+run_name_template: "%Y%m%d-%H%M%S-silver-validation"
+validations:
+  - batch_request:
+      datasource_name: silver_datasource
+      data_connector_name: default_configured_data_connector_name
+      data_asset_name: silver_table
+    expectation_suite_name: silver_netflix_suite
